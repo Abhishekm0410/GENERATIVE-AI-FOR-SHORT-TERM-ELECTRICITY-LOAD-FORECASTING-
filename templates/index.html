@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Power Consumption Predictor</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
+
+    body {
+      font-family: "Poppins", "Segoe UI", Arial, sans-serif;
+      background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+      height: 100vh;
+      margin: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      position: relative;
+      color: white;
+    }
+
+    /* Animated gradient waves */
+    .background {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(circle at 20% 20%, rgba(0,212,255,0.15) 0%, transparent 60%),
+                  radial-gradient(circle at 80% 80%, rgba(0,255,179,0.15) 0%, transparent 60%);
+      animation: moveBackground 10s infinite alternate ease-in-out;
+      z-index: 0;
+      filter: blur(100px);
+    }
+
+    @keyframes moveBackground {
+      from { transform: translate(-10%, -10%); }
+      to { transform: translate(10%, 10%); }
+    }
+
+    /* Floating glowing circles */
+    .glow {
+      position: absolute;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(0,255,255,0.5), rgba(0,255,255,0) 70%);
+      animation: float 8s infinite ease-in-out alternate;
+      opacity: 0.7;
+    }
+
+    .glow:nth-child(1) {
+      width: 180px;
+      height: 180px;
+      top: 20%;
+      left: 10%;
+      animation-delay: 0s;
+    }
+
+    .glow:nth-child(2) {
+      width: 120px;
+      height: 120px;
+      bottom: 15%;
+      right: 15%;
+      animation-delay: 2s;
+    }
+
+    .glow:nth-child(3) {
+      width: 220px;
+      height: 220px;
+      bottom: 10%;
+      left: 25%;
+      animation-delay: 4s;
+    }
+
+    @keyframes float {
+      from { transform: translateY(0px); opacity: 0.8; }
+      to { transform: translateY(-40px); opacity: 1; }
+    }
+
+    /* Main card container */
+    .container {
+      position: relative;
+      background: rgba(255, 255, 255, 0.12);
+      padding: 35px 40px;
+      border-radius: 16px;
+      box-shadow: 0 10px 35px rgba(0, 0, 0, 0.4);
+      width: 400px;
+      text-align: center;
+      backdrop-filter: blur(15px);
+      z-index: 2;
+      border: 1px solid rgba(255,255,255,0.2);
+    }
+
+    h1 {
+      color: #00d4ff;
+      font-size: 24px;
+      margin-bottom: 10px;
+      text-shadow: 0 0 10px rgba(0, 212, 255, 0.6);
+      animation: glowTitle 2s infinite alternate;
+    }
+
+    @keyframes glowTitle {
+      from { text-shadow: 0 0 10px rgba(0,212,255,0.6); }
+      to { text-shadow: 0 0 25px rgba(0,212,255,1); }
+    }
+
+    p {
+      color: #dcefff;
+      font-size: 15px;
+      margin-bottom: 20px;
+    }
+
+    input {
+      width: 100%;
+      padding: 12px;
+      margin-top: 10px;
+      font-size: 15px;
+      border: none;
+      border-radius: 8px;
+      outline: none;
+      color: #222;
+      background: #ffffff;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    input:focus {
+      box-shadow: 0 0 10px rgba(0, 212, 255, 0.6);
+      transform: scale(1.02);
+    }
+
+    button {
+      margin-top: 20px;
+      background: linear-gradient(90deg, #00d4ff, #00ffa3);
+      color: #000;
+      padding: 12px 18px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: 600;
+      transition: transform 0.25s ease, box-shadow 0.25s ease;
+    }
+
+    button:hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 15px rgba(0,255,255,0.5);
+    }
+
+    .result {
+      margin-top: 25px;
+      font-weight: 600;
+      font-size: 17px;
+      color: #fff;
+      background: rgba(0, 255, 255, 0.1);
+      padding: 12px;
+      border-radius: 8px;
+      border-left: 4px solid #00ffa3;
+      display: none;
+    }
+
+    .footer {
+      margin-top: 25px;
+      font-size: 12px;
+      color: #b5dfff;
+    }
+  </style>
+</head>
+<body>
+  <div class="background"></div>
+  <div class="glow"></div>
+  <div class="glow"></div>
+  <div class="glow"></div>
+
+  <div class="container">
+    <h1>⚡ Power Consumption Predictor</h1>
+    <p>Enter a date & time to get the predicted power usage (in kW)</p>
+
+    <input type="datetime-local" id="datetimeInput" />
+    <button onclick="predictPower()">Predict</button>
+
+    <div id="result" class="result"></div>
+
+    <div class="footer">LSTM + GAN Hybrid Energy Model</div>
+  </div>
+
+  <script>
+    async function predictPower() {
+      const datetime = document.getElementById("datetimeInput").value;
+      const resultDiv = document.getElementById("result");
+
+      if (!datetime) {
+        resultDiv.style.display = "block";
+        resultDiv.style.borderLeftColor = "#ff5c5c";
+        resultDiv.innerText = "⚠️ Please select a date and time!";
+        return;
+      }
+
+      resultDiv.style.display = "block";
+      resultDiv.style.borderLeftColor = "#00ffa3";
+      resultDiv.innerText = "⏳ Predicting... please wait";
+
+      try {
+        const response = await fetch("/predict", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ datetime }),
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          resultDiv.style.borderLeftColor = "#00ffa3";
+          resultDiv.innerHTML = `✅ Predicted Power: <b>${data.prediction.toFixed(2)} kW</b>`;
+        } else {
+          resultDiv.style.borderLeftColor = "#ff5c5c";
+          resultDiv.innerText = `❌ Error: ${data.message}`;
+        }
+      } catch (error) {
+        resultDiv.style.borderLeftColor = "#ff5c5c";
+        resultDiv.innerText = "❌ Failed to connect to backend.";
+      }
+    }
+  </script>
+</body>
+</html>
